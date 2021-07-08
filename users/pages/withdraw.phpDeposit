@@ -1,0 +1,480 @@
+
+<?php
+
+session_start();
+
+
+include "../../config/db.php";
+
+$msg = "";
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+$username=$_GET['username'];
+$email=$_GET['email'];
+
+
+if(isset($_SESSION['email'])){
+	
+
+  $sql = "UPDATE users SET session='1' WHERE email='$email'";
+
+  mysqli_query($link, $sql) or die(mysqli_error($link));
+
+
+}
+else{
+
+
+header("location:../form/signin.php");
+}
+
+$sql1= "SELECT * FROM users WHERE email = '$email'";
+  $result1 = mysqli_query($link,$sql1);
+  if(mysqli_num_rows($result1) > 0){
+   $row = mysqli_fetch_assoc($result1);
+   $row['verify'];
+   $row['walletbalance'];
+  }
+ 
+function getPrice($url){
+  $decode = file_get_contents($url);
+return json_decode($decode, true);
+}
+$ethUsd  = getPrice('https://www.cryptonator.com/api/ticker/eth-usd/');
+$ethPrice = $ethUsd["ticker"]["price"];
+$ethDisplay = round($ethPrice, 2);
+
+
+$btcUsd  = getPrice('https://www.cryptonator.com/api/ticker/btc-usd/');
+$btcPrice = $btcUsd["ticker"]["price"];
+$btcDisplay = round($btcPrice, 2);
+
+
+if(isset($_POST['btc'])){
+
+  
+  if(isset($row['verify']) &&  $row['verify']==1){
+	
+
+    $v =$link->real_escape_string( $_POST['v']);
+    $mode =$link->real_escape_string($_POST['mode']);
+  $email =$link->real_escape_string($_POST['email']);
+  $acctno =$link->real_escape_string($_POST['acctno']);
+  $status =$link->real_escape_string($_POST['status']);
+  $btcDisplay =$link->real_escape_string($_POST['btcDisplay']);
+  $j = (double)$btcDisplay * (double)$v;
+
+  $tnx = uniqid('tnx');
+  
+  
+
+  
+  $sql = "INSERT INTO wbtc (moni,mode,email,acctno,status,tnx)
+  VALUES ('$j','$mode','$email','$acctno','$status','$tnx')";
+  
+  if($row['walletbalance'] >= $j){
+   if($j < 60){
+     $msg = "Minimum withdrawal is $60 USD";
+   }else {
+
+     if(mysqli_query($link, $sql)){
+             $balance =  $row['walletbalance'];
+      $sq = "UPDATE users SET walletbalance = walletbalance - $j WHERE email='$email'";
+
+      mysqli_query($link, $sq);
+
+    include_once "PHPMailer/PHPMailer.php";
+    require_once 'PHPMailer/Exception.php';
+  
+    $mail= new PHPMailer();
+    $mail->setFrom('support@coin2wealth.com');
+    $mail->addAddress($email, $username);
+    $mail->Subject = "Withdraw Alert!";
+    $mail->isHTML(true);
+    $mail->Body = "
+    
+    <div style='background-color:#fff; color:black;'>
+    <h2>Thank you for investing on coin2wealth</h2>
+    </br>
+  <p>Your withdraw order of $v  BTC has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed</p>
+  </div>";
+    if($mail->send()){
+  
+      $msg= " Your withdraw order of $v  BTC has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed ";
+    }
+     }
+  
+  
+   }
+  
+  } else {
+    $msg = "Insufficient balance";
+  }
+  
+
+   
+  }
+ 
+  else{
+  
+  $msg = "your withdrawal cannot be completed pls verify your ID";
+  }
+
+
+}
+
+
+// ethereum withdraw
+
+if(isset($_POST['eth'])){
+
+  
+  if(isset($row['verify']) &&  $row['verify']==1){
+	
+
+    $v =$link->real_escape_string( $_POST['v']);
+    $mode =$link->real_escape_string($_POST['mode']);
+  $email =$link->real_escape_string($_POST['email']);
+  $acctno =$link->real_escape_string($_POST['acctno']);
+  $status =$link->real_escape_string($_POST['status']);
+  $ethDisplay =$link->real_escape_string($_POST['ethDisplay']);
+  $j = (double)$ethDisplay * (double)$v;
+  $tnx = uniqid('tnx');
+  
+  
+
+  
+  $sql = "INSERT INTO wbtc (moni,mode,email,acctno,status,tnx)
+  VALUES ('$j','$mode','$email','$acctno','$status','$tnx')";
+  
+  if($row['walletbalance'] >= $j){
+   if($j < 20){
+     $msg = "Minimum withdrawal is $20 USD";
+   }else {
+
+     if(mysqli_query($link, $sql)){
+             $balance =  $row['walletbalance'];
+      $sq = "UPDATE users SET walletbalance = walletbalance - $j WHERE email='$email'";
+
+      mysqli_query($link, $sq);
+
+    include_once "PHPMailer/PHPMailer.php";
+  
+    $mail= new PHPMailer();
+    $mail->setFrom('info@killocoin.com');
+    $mail->addAddress($email, $username);
+    $mail->Subject = "email verification";
+    $mail->isHTML(true);
+    $mail->Body = "
+    
+    <div style='background-color:#fff; color:black;'>
+    <h2>Thank you for investing on coin2wealth</h2>
+    </br>
+  <p>Your withdraw order of $v  ETH has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed</p>
+  </div>";
+    if($mail->send()){
+  
+      $msg= " Your withdraw order of $v  ETH has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed ";
+    }
+     }
+  
+  
+   }
+  
+  } else {
+    $msg = "Insufficient balance";
+  }
+  
+
+   
+  }
+ 
+  else{
+  
+  $msg = "your withdrawal cannot be completed pls verify your ID";
+  }
+
+
+}
+
+
+//bank withdrawal
+
+
+if(isset($_POST['bank'])){
+
+  
+  if(isset($row['verify']) &&  $row['verify']==1){
+	
+
+    $v =$link->real_escape_string( $_POST['v']);
+    $mode =$link->real_escape_string($_POST['mode']);
+  $email =$link->real_escape_string($_POST['email']);
+  $acctno =$link->real_escape_string($_POST['acctno']);
+  $status =$link->real_escape_string($_POST['status']);
+  $bname =$link->real_escape_string($_POST['bname']);
+  $acctname =$link->real_escape_string($_POST['acctname']);
+  $tnx = uniqid('tnx');
+  
+  
+
+  
+  $sql = "INSERT INTO wbtc (moni,mode,email,acctno,status,tnx,bname,acctname)
+  VALUES ('$v','$mode','$email','$acctno','$status','$tnx','$bname','$acctname')";
+  
+  if($row['walletbalance'] >= $v){
+   if($v < 20){
+     $msg = "Minimum withdrawal is $20 USD";
+   }else {
+
+     if(mysqli_query($link, $sql)){
+             $balance =  $row['walletbalance'];
+      $sq = "UPDATE users SET walletbalance = walletbalance - $v WHERE email='$email'";
+
+      mysqli_query($link, $sq);
+
+    include_once "PHPMailer/PHPMailer.php";
+  
+    $mail= new PHPMailer();
+    $mail->setFrom('info@killocoin.com');
+    $mail->addAddress($email, $username);
+    $mail->Subject = "email verification";
+    $mail->isHTML(true);
+    $mail->Body = "
+    
+    <div style='background-color:#fff; color:black;'>
+    <h2>Thank you for investing on coin2wealth</h2>
+    </br>
+  <p>Your withdraw order of $v  ETH has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed</p>
+  </div>";
+    if($mail->send()){
+  
+      $msg= " Your withdraw order of $v  ETH has been sent, your transaction ID is $tnx , you  will be credited once your order is confirmed ";
+    }
+     }
+  
+  
+   }
+  
+  } else {
+    $msg = "Insufficient balance";
+  }
+  
+
+   
+  }
+ 
+  else{
+  
+  $msg = "your withdrawal cannot be completed pls verify your ID";
+  }
+
+
+}
+
+
+
+
+
+
+function test_input($data) {
+  $data = trim($data);
+  $data = stripslashes($data);
+  $data = htmlspecialchars($data);
+  return $data;
+}
+include "header.php";
+
+
+ 
+?>
+
+</script>
+
+
+ <div class="content-wrapper">
+  
+
+
+  <!-- Main content -->
+  <section class="content">
+
+
+
+   
+
+
+       
+
+<div class="col-md-12 col-sm-12 col-sx-12">
+          <div class="box box-default">
+            <div class="box-header with-border">
+
+          <h4 align="center"><i class="fa fa-refresh"></i> Coin2Wealth  Withdrawal Process</h4>
+</br>
+<div class="row">
+        <div class="col-xs-12">
+          <div class="box box-default">
+            <div class="box-header with-border">
+            <button type="button" class="btn btn-default" style="width:100%; font-size:30px;padding:40px; color: blue; " >
+
+                <b> <i class="fa  fa-money" id="icone"  ></i> <?php echo round($row['walletbalance'],2);?> USD</b>
+
+              </button>
+            <?php if($msg != "") echo "<div style='padding:20px;background-color:#dce8f7;color:black'> $msg</div class='btn btn-success'>" ."</br></br>";  ?>
+          </br>
+            </div>
+            <div class="box-body" style="margin-left:5%">
+              <button type="button" class="btn btn-success" data-toggle="modal" data-target="#btc">
+                Request Bitcoin Withdrawal
+              </button>
+              </br></br>
+              <button type="button" class="btn btn-info" data-toggle="modal" data-target="#eth">
+                Request ethers withdrawal
+              </button>
+              </br></br>
+              <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#bnk">
+                Request bank tfr withdrawal
+              </button>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="modal modal-success fade" id="btc">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Bitcoin Withdrawal</h4>
+              </div>
+              <div class="modal-body">
+
+              <form class="form-horizontal" action="withdraw.php?username=<?php  echo $_SESSION['username']?>&email=<?php  echo $_SESSION['email']?>&sessions= <?php  echo $_SESSION['session']?>" method="POST" >
+
+<div class="form-group">
+<input type="double"  name="v"  placeholder="Value in BTC" class="form-control">
+ 
+</div>
+<input type="hidden"  name="mode" value="btc" class="form-control">
+<input type="hidden"  name="acctno" value="<?php  echo $_SESSION['btc']?>" class="form-control">
+<input type="hidden"  name="btcDisplay" value="<?php  echo $btcDisplay?>" class="form-control">
+ <input type="hidden"  name="email" value="<?php  echo $_SESSION['email']?>" class="form-control">
+
+
+ <input type="hidden"  name="status" value="pending" class="form-control">
+
+ <button type="submit" name="btc" class="btn btn-outline">Withdraw</button>
+
+ </form>
+              </div>
+              <div class="modal-footer">
+              
+              
+                <button type="button" class="btn btn-danger pull-left" data-dismiss="modal">Close</button>
+              
+              </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal -->
+
+        <div class="modal modal-primary fade" id="eth">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Ethereum Withdrawal</h4>
+              </div>
+              <div class="modal-body">
+              <form class="form-horizontal" action="withdraw.php?username=<?php  echo $_SESSION['username']?>&email=<?php  echo $_SESSION['email']?>&sessions= <?php  echo $_SESSION['session']?>" method="POST" >
+
+<div class="form-group">
+ <input type="double"  name="v" placeholder="Value in ETH" class="form-control">
+</div>
+<input type="hidden"  name="acctno" value="<?php  echo $_SESSION['eth']?>" class="form-control">
+<input type="hidden"  name="ethDisplay" value="<?php  echo $ethDisplay?>" class="form-control">
+<input type="hidden"  name="mode" value="eth" class="form-control">
+ <input type="hidden"  name="email" value="<?php  echo $_SESSION['email']?>" class="form-control">
+
+ <input type="hidden"  name="status" value="pending" class="form-control">
+              </div>
+              <div class="modal-footer">
+              <button type="submit" name="eth" class="btn btn-outline">Withdraw</button>
+              </form>
+                <button type="button" class="btn btn-outline pull-left" data-dismiss="modal">Close</button>
+                
+              </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal -->
+
+        <div class="modal modal-warning fade" id="bnk">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Bank withdrawal</h4>
+              </div>
+              <div class="modal-body">
+              <form class="form-horizontal" action="withdraw.php?username=<?php  echo $_SESSION['username']?>&email=<?php  echo $_SESSION['email']?>&sessions= <?php  echo $_SESSION['session']?>" method="POST" >
+
+<div class="form-group">
+ <input type="double"  name="v" placeholder="Value in USD" class="form-control">
+</div>
+
+<input type="hidden"  name="acctno" value="<?php  echo $_SESSION['acctno']?>" class="form-control">
+<input type="hidden"  name="mode" value="usd" class="form-control">
+
+<input type="hidden"  name="acctname" value="<?php  echo $_SESSION['acctname']?>" class="form-control">
+<input type="hidden"  name="bname" value="<?php  echo $_SESSION['bname']?>" class="form-control">
+
+ <input type="hidden"  name="email" value="<?php  echo $_SESSION['email']?>" class="form-control">
+
+ <input type="hidden"  name="status" value="pending" class="form-control">
+              </div>
+              <div class="modal-footer">
+
+              <button type="submit" name="bank" class="btn btn-outline">Withdraw</button>
+               
+    </form>
+    <button type="button" class="btn btn-outline pull-left" data-dismiss="modal">Close</button>
+                
+
+              </div>
+            </div>
+            <!-- /.modal-content -->
+          </div>
+          <!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal -->
+ 
+        
+           
+
+     
+
+      
+
+
+
+
+    </div>
+   </div>
+
+   </div>
+  </div>
+  </section>
+</div>
+

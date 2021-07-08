@@ -1,0 +1,64 @@
+*************************************************************
+********************************
+*************************************************************
+
+SCRIPT NAME: INVESTMENT PRO
+
+
+***SCRIPT CREDENTIALS***
+
+Admin Username: admin@enoinvest.cash
+
+Admin Password: admin123 (you can change it)
+
+Admin Login URL: /admin/c2wadmin/signin.php
+
+Customers Login URL: /users/form/signin.php
+
+Database Location Folder: /db/investment.sql
+
+Configuration File Location: /config/db.php
+
+Languages: HTML, PHP, MYSQL, JavaScript and CSS
+
+/
+/
+/
+/
+
+***DEMO USER***
+
+-Email: demo@webbiit.com
+
+-Password: 123456
+
+/
+/
+/
+/
+
+***SERVER REQUIREMENT***
+
+-Shared hosting or VPS
+-PHP 7 or higher
+-Must support MySQL
+(((THIS SCRIPT HAS BEEN TESTED AND ITS WORKING PERFECTLY ON XAMPP LOCAL SERVER AND NAMECHEAP LIVE SERVER)))
+
+/
+/
+/
+/
+
+***How to install this bank script***
+
+-Download the file
+-Unzip the file
+-Unload the file to a live server or local server
+-Create a database
+-Create a database user and set a strong password for it
+-Add the database user you created to the database you just created, and grant all privileges to the user (for those on live server).
+-Go to  phpMyAdmin and import your script database file to your database (the file will be found in the db folder in the file you unzipped)
+-Edit the configuration file to your server information (edit database name, database user, and database password, it will be found in /config/db.php)
+-Create webmail, (the email the will be responsible for all mails)
+-Use your web browser to locate the site.
+-Login to your admin, go to settings, add the webmail you created, site name, and logo.
